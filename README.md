@@ -40,3 +40,4 @@ Reference docs:
 
 - https://openfeature.dev/docs/tutorials/ofo/
 - https://killercoda.com/open-feature/scenario/openfeature-operator-demo
+- https://artifacthub.io/packages/helm/open-feature-operator/open-feature-operator
