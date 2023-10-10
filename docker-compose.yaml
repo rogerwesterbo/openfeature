@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  flagd:
+    image: ghcr.io/open-feature/flagd:latest
+    ports:
+      - 8013:8013
+    volumes:
+      - ./flagd:/etc/flagd
+    command: ["start", "--uri", "file:/etc/flagd/flags.flagd.json"]
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - API_HOST=""
+      - FLAGD_HOST=flagd
+    ports:
+      - 7357:7357
+    depends_on:
+      flagd:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://api:7537"]
+      interval: 30s
+      timeout: 10s
+      retries: 5

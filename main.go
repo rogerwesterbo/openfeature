@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -8,9 +9,24 @@ import (
 	"syscall"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
+
+	flagd "github.com/open-feature/go-sdk-contrib/providers/flagd/pkg"
+	"github.com/open-feature/go-sdk/pkg/openfeature"
 )
 
-const defaultMessage = "Hello!"
+const defaultMessage = "Hello hello!"
+const newWelcomeMessage = "Hello, welcome to this OpenFeature-enabled website!"
+
+func init() {
+	viper.AutomaticEnv()
+
+	viper.SetDefault("API_PORT", 7357)
+	viper.SetDefault("API_HOST", "")
+
+	viper.SetDefault("FLAGD_HOST", "localhost")
+	viper.SetDefault("FLAGD_PORT", 8013)
+}
 
 func main() {
 	cancelChan := make(chan os.Signal, 1)
@@ -19,6 +35,21 @@ func main() {
 	signal.Notify(cancelChan, syscall.SIGTERM, syscall.SIGINT)
 
 	_, _ = fmt.Fprintln(os.Stdout, "🚀 Starting server...")
+
+	// Use flagd as the OpenFeature provider
+	flagdHost := viper.GetString("FLAGD_HOST")
+	flagdPort := viper.GetUint16("FLAGD_PORT")
+	provider := flagd.NewProvider(
+		flagd.WithHost(flagdHost),
+		flagd.WithPort(flagdPort))
+	err := openfeature.SetProvider(provider)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Error setting OpenFeature provider: %s\n", err)
+		os.Exit(1)
+	}
+
+	// Initialize OpenFeature openFeatureClient
+	openFeatureClient := openfeature.NewClient("GoStartApp")
 
 	// Initialize Go Gin
 	engine := gin.Default()
@@ -29,12 +60,25 @@ func main() {
 		return
 	})
 	engine.GET("/hello", func(c *gin.Context) {
-		c.JSON(http.StatusOK, defaultMessage)
-		return
+		// Evaluate welcome-message feature flag
+		welcomeMessage, _ := openFeatureClient.BooleanValue(
+			context.Background(), "welcome-message", false, openfeature.EvaluationContext{},
+		)
+
+		if welcomeMessage {
+			c.JSON(http.StatusOK, newWelcomeMessage)
+			return
+		} else {
+			c.JSON(http.StatusOK, defaultMessage)
+			return
+		}
 	})
 
 	go func() {
-		_ = engine.Run("localhost:7357")
+		apiHost := viper.GetString("API_HOST")
+		apiPort := viper.GetString("API_PORT")
+		apiAddress := fmt.Sprintf("%s:%s", apiHost, apiPort)
+		_ = engine.Run(apiAddress)
 		sig := <-cancelChan
 		_, _ = fmt.Println()
 		_, _ = fmt.Println(sig)
