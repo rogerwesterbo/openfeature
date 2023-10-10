@@ -1,3 +1,5 @@
+[![Build & Test](https://github.com/rogerwesterbo/openfeature/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/rogerwesterbo/openfeature/actions/workflows/build-and-test.yml)
+
 # OpenFeature
 
 Showing how to use OpenFeature in Golang API
