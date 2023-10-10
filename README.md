@@ -1,4 +1,4 @@
-# openfeature
+# OpenFeature
 
 Showing how to use OpenFeature in Golang API
 
