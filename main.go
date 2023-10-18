@@ -77,8 +77,14 @@ func main() {
 	go func() {
 		apiHost := viper.GetString("API_HOST")
 		apiPort := viper.GetString("API_PORT")
-		apiAddress := fmt.Sprintf("%s:%s", apiHost, apiPort)
-		_ = engine.Run(apiAddress)
+
+		if apiHost != "" && apiPort != "" {
+			apiAddress := fmt.Sprintf("%s:%s", apiHost, apiPort)
+			_ = engine.Run(apiAddress)
+		} else {
+			_ = engine.Run()
+		}
+
 		sig := <-cancelChan
 		_, _ = fmt.Println()
 		_, _ = fmt.Println(sig)

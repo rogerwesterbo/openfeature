@@ -13,10 +13,9 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - API_HOST=""
       - FLAGD_HOST=flagd
     ports:
-      - 7357:7357
+      - "8080:8080"
     depends_on:
       flagd:
         condition: service_started
